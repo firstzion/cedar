@@ -1,0 +1,14 @@
+// Main electric meter: measures the whole site. Required points are the
+// cumulative energy register and the demand reading (both import).
+AtsElecMeter : ElecMeter {
+  points: {
+    ElecAcImportActiveEnergySensor
+    ElecAcImportActiveDemandSensor
+  }
+}
+
+// Electric submeter: measures one system or area inside a site and points
+// at its parent meter with submeterOf. Same points as the main meter.
+AtsElecSubmeter : AtsElecMeter {
+  submeterOf: Ref <of:ElecMeter>
+}

@@ -1,0 +1,28 @@
+name: skyspark-lite
+services:
+  haxall:
+    image: skyspark-lite-haxall
+    container_name: skyspark_lite_haxall
+    build:
+      context: .
+      args:
+        HAXALL_REF: ${HAXALL_REF}
+        XETO_REF: ${XETO_REF}
+        DEFS_REF: ${DEFS_REF}
+        FANTOM_REF: ${FANTOM_REF}
+    ports:
+      - "${HAXALL_PORT:-8080}:8080"
+    volumes:
+      - ../dbs:/app/haxall/dbs
+      - ../specs:/app/specs
+    environment:
+      HAXALL_DB_NAME: ${HAXALL_DB_NAME:-demo}
+      HAXALL_SU_USERNAME: ${HAXALL_SU_USERNAME:-su}
+      HAXALL_SU_PASSWORD: ${HAXALL_SU_PASSWORD:?set HAXALL_SU_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped

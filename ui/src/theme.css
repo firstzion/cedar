@@ -1,0 +1,109 @@
+/*
+  SkySpark Lite design tokens (the "ATS" theme).
+
+  This file is the whole design system in one place: change a value here and the entire app follows.
+  It holds only variables. How components use them lives in styles.css. A plain-language guide is in docs/design-system.md.
+
+  Layers:
+    1. Brand palette       the ATS website's own colours, by name. Never used directly in components.
+    2. Meaning tokens      what a colour is *for* (page, panel, text, link, call to action, ok, error...).
+                           These switch between light and dark.
+    3. Chart colours       eight series colours in a fixed order, checked for colour-blind safety (see docs/design-system.md).
+    4. Type and shape      font, sizes, corner radius.
+*/
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- 1. Brand palette (read from atsintegrators.com, 2026-10-16) ---- */
+  --ats-gold: #f8bb34;      /* accent / call to action */
+  --ats-navy: #004681;      /* primary */
+  --ats-ink: #222222;       /* body text */
+  --ats-gray-600: #636363;
+  --ats-gray-400: #aaaaaa;
+  --ats-gray-200: #eaeaea;
+  --ats-gray-100: #f2f2f2;  /* page background */
+  --ats-white: #ffffff;
+  --ats-green: #13612e;     /* success */
+  --ats-red: #b82105;       /* error */
+  --ats-orange: #f7630c;
+  --ats-blue: #1159af;      /* bright link blue */
+  --ats-amber: #f5a524;     /* warning */
+  /* shades made from the navy for dark mode and hover states */
+  --ats-navy-deep: #00335c;
+  --ats-night: #0a1727;
+  --ats-night-panel: #112338;
+
+  /* ---- 2. Meaning tokens: light ---- */
+  --bg: var(--ats-gray-100);          /* page */
+  --panel: var(--ats-white);          /* cards and panes */
+  --text: var(--ats-ink);
+  --muted: var(--ats-gray-600);       /* secondary text (6.1:1 on white) */
+  --line: #d4d4d4;                    /* borders and rules */
+  --link: var(--ats-navy);
+  --accent: var(--ats-navy);          /* selected / active / filled controls */
+  --accent-text: var(--ats-white);
+  --cta: var(--ats-gold);             /* the main action on a screen */
+  --cta-hover: #e5a617;
+  --cta-text: var(--ats-ink);
+  --chrome: var(--ats-navy);          /* top bar and sign-in backdrop */
+  --chrome-text: var(--ats-white);
+  --focus: var(--ats-navy);           /* keyboard focus ring */
+  --ok: var(--ats-green);
+  --ok-bg: #e6f1ea;
+  --warn-line: var(--ats-amber);
+  --warn-bg: #fff4d6;
+  --err-line: var(--ats-red);
+  --err-bg: #fbe9e5;
+  --err-solid-text: var(--ats-white); /* text on a solid error colour */
+  --gap-band: rgba(0, 70, 129, 0.12); /* shaded "no data" bands on charts */
+
+  /* ---- 3. Chart colours: light surface (white). Fixed order; never cycled ---- */
+  --series-1: #1159af;  /* ATS blue */
+  --series-2: #f7630c;  /* ATS orange */
+  --series-3: #1baf7a;  /* aqua */
+  --series-4: #eda100;  /* amber */
+  --series-5: #e87ba4;  /* magenta */
+  --series-6: #13612e;  /* ATS green */
+  --series-7: #4a3aa7;  /* violet */
+  --series-8: #b82105;  /* ATS red */
+
+  /* ---- 4. Type and shape ---- */
+  --font: 'Ubuntu', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius: 2px;        /* the ATS site uses square corners; just a hint of softness here */
+  --size-base: 15px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* ---- 2. Meaning tokens: dark (deep navy, gold accents) ---- */
+    --bg: var(--ats-night);
+    --panel: var(--ats-night-panel);
+    --text: #f2f2f2;
+    --muted: #a9b6c6;
+    --line: #26425f;
+    --link: #7fb2ea;
+    --accent: var(--ats-gold);
+    --accent-text: var(--ats-ink);
+    --chrome: var(--ats-navy-deep);
+    --focus: var(--ats-gold);
+    --ok: #4fae72;
+    --ok-bg: #12301e;
+    --warn-bg: #3b3014;
+    --err-line: #e66767;
+    --err-bg: #3a1a14;
+    --err-solid-text: #1a0a08;
+    --gap-band: rgba(169, 182, 198, 0.16);
+
+    /* ---- 3. Chart colours: dark surface (#112338) ---- */
+    --series-1: #4a8fe0;
+    --series-2: #e8661a;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+  }
+}

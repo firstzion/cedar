@@ -1,0 +1,17 @@
+// Variable air volume terminal unit with a hot water reheat coil.
+AtsVav : Vav {
+  points: {
+    // Zone conditions and setpoints
+    ZoneAirTempSensor
+    ZoneAirTempCoolingSp
+    ZoneAirTempHeatingSp
+    ZoneOccupiedSensor
+    // Airflow and damper
+    DischargeAirFlowSensor
+    DischargeAirFlowSp
+    DischargeAirDamperModulatingCmd
+    // Reheat coil and discharge temperature
+    HotWaterValveModulatingCmd
+    DischargeAirTempSensor
+  }
+}

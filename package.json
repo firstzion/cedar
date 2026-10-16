@@ -1,0 +1,29 @@
+{
+  "name": "skyspark-lite",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "tools",
+    "ui"
+  ],
+  "scripts": {
+    "spike": "npm run spike -w @ssl/haystack",
+    "demo:load": "npm run -s demo -w @ssl/tools -- load",
+    "demo:ensure": "npm run -s demo -w @ssl/tools -- ensure",
+    "demo:reset": "npm run -s demo -w @ssl/tools -- reset"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "jsdom": "30.1.3",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.5"
+  }
+}

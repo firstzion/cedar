@@ -1,0 +1,7 @@
+// A building site. Extends ph::Site and makes the fields we always fill in
+// required: area, time zone, and street address.
+AtsSite : Site {
+  area: Number
+  tz:   TimeZone
+  geoAddr: Str
+}

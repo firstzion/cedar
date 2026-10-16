@@ -1,0 +1,12 @@
+{
+  "name": "@ssl/haystack",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "axon": "node --env-file=../../.env --experimental-strip-types src/axon-cli.ts",
+    "spike": "node --env-file=../../.env --experimental-strip-types src/spike.ts"
+  },
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

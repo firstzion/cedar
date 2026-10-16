@@ -1,0 +1,132 @@
+{
+  "generatedAt": "2026-10-16T22:39:10.280Z",
+  "seed": 42,
+  "tz": "Los_Angeles",
+  "intervalMinutes": 15,
+  "days": 90,
+  "firstSample": "2026-07-18T15:45:00-07:00",
+  "lastSample": "2026-10-16T15:30:00-07:00",
+  "sampleCount": 8640,
+  "faults": [
+    {
+      "id": 1,
+      "name": "Simultaneous heating and cooling",
+      "kind": "simultaneous-heat-cool",
+      "description": "AHU-1 cooling and heating valves are both well open (35-70%) while the fan runs, Monday through Thursday.",
+      "equipRef": "3265640c-008d9847",
+      "equipName": "AHU-1",
+      "points": [
+        {
+          "id": "3265640c-9530eb3f",
+          "name": "ChilledWaterValveModulatingCmd"
+        },
+        {
+          "id": "3265640c-409ac687",
+          "name": "HotWaterValveModulatingCmd"
+        }
+      ],
+      "start": "2026-08-24T00:00:00-07:00",
+      "end": "2026-08-28T00:00:00-07:00"
+    },
+    {
+      "id": 2,
+      "name": "VAV damper stuck",
+      "kind": "stuck-damper",
+      "description": "VAV-1-3 damper command is frozen at 35% while the airflow setpoint keeps changing; measured airflow does not follow the setpoint.",
+      "equipRef": "3265640c-6554a304",
+      "equipName": "VAV-1-3",
+      "points": [
+        {
+          "id": "3265640c-b61251d8",
+          "name": "DischargeAirDamperModulatingCmd"
+        },
+        {
+          "id": "3265640c-2be44350",
+          "name": "DischargeAirFlowSp"
+        },
+        {
+          "id": "3265640c-87674623",
+          "name": "DischargeAirFlowSensor"
+        }
+      ],
+      "start": "2026-09-14T00:00:00-07:00",
+      "end": "2026-09-19T00:00:00-07:00"
+    },
+    {
+      "id": 3,
+      "name": "Zone temperature sensor flatline",
+      "kind": "flatline",
+      "description": "VAV-2-2 zone temperature sensor reports exactly the same value for 7 days.",
+      "equipRef": "3265640c-f0fb3fea",
+      "equipName": "VAV-2-2",
+      "points": [
+        {
+          "id": "3265640c-aea54df0",
+          "name": "ZoneAirTempSensor"
+        }
+      ],
+      "start": "2026-08-31T00:00:00-07:00",
+      "end": "2026-09-07T00:00:00-07:00"
+    },
+    {
+      "id": 4,
+      "name": "AHU running 24/7 over a weekend",
+      "kind": "weekend-override",
+      "description": "AHU-2 stays in occupied mode with the fan running all day Saturday and Sunday (schedule override left on).",
+      "equipRef": "3265640c-7865ea0b",
+      "equipName": "AHU-2",
+      "points": [
+        {
+          "id": "3265640c-6f471d7a",
+          "name": "DischargeFanRunCmd"
+        },
+        {
+          "id": "3265640c-577d7fd6",
+          "name": "DischargeFanRunSensor"
+        },
+        {
+          "id": "3265640c-047eff82",
+          "name": "AtsOccupiedSp"
+        }
+      ],
+      "start": "2026-09-26T00:00:00-07:00",
+      "end": "2026-09-28T00:00:00-07:00"
+    },
+    {
+      "id": 5,
+      "name": "Submeter data gap",
+      "kind": "data-gap",
+      "description": "No samples at all are stored for the lighting/plug submeter for 24 hours (08:00 Wednesday to 08:00 Thursday).",
+      "equipRef": "3265640c-d3eb4673",
+      "equipName": "Lighting & Plug Submeter",
+      "points": [
+        {
+          "id": "3265640c-b6ba015f",
+          "name": "ElecAcImportActiveDemandSensor"
+        },
+        {
+          "id": "3265640c-1e044f05",
+          "name": "ElecAcImportActiveEnergySensor"
+        }
+      ],
+      "start": "2026-09-23T08:00:00-07:00",
+      "end": "2026-09-24T08:00:00-07:00"
+    },
+    {
+      "id": 6,
+      "name": "Outside air temperature sensor out of range",
+      "kind": "implausible-value",
+      "description": "AHU-1 outside air temperature sensor reads -40 F (typical open-circuit value) for 18 hours starting 02:00 Tuesday.",
+      "equipRef": "3265640c-008d9847",
+      "equipName": "AHU-1",
+      "points": [
+        {
+          "id": "3265640c-942e6a28",
+          "name": "OutsideAirTempSensor"
+        }
+      ],
+      "start": "2026-10-06T02:00:00-07:00",
+      "end": "2026-10-06T20:00:00-07:00"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+//
+// ats: SkySpark Lite equipment library.
+//
+// Opinionated "standard" equipment templates for a small commercial building:
+// site, VAV air handler, VAV terminal unit, and electric meters.
+// Every spec extends a standard Project Haystack spec and only adds required
+// points; nothing in ph.* is redefined or modified.
+//
+pragma: Lib <
+  doc: "SkySpark Lite equipment specs: site, AHU, VAV, electric meters"
+  version: "0.1.0"
+  depends: {
+    { lib: "sys" }
+    { lib: "ph" }
+    { lib: "ph.points" }
+    { lib: "ph.points.sugar" }
+    { lib: "ph.elec" }
+  }
+>

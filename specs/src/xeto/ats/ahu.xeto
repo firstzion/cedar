@@ -1,0 +1,31 @@
+// Air handling unit that serves VAV terminal units (single duct, chilled and
+// hot water coils, economizer). A question mark after a point means optional.
+AtsAhu : Ahu {
+  points: {
+    // Discharge (supply) air
+    DischargeAirTempSensor
+    DischargeAirTempSp
+    // Other air temperatures
+    ReturnAirTempSensor
+    MixedAirTempSensor
+    OutsideAirTempSensor
+    // Supply fan
+    DischargeFanRunCmd
+    DischargeFanRunSensor
+    DischargeFanSpeedModulatingCmd
+    // Duct static pressure
+    DischargeAirPressureSensor
+    DischargeAirPressureSp
+    // Coils and economizer
+    ChilledWaterValveModulatingCmd
+    HotWaterValveModulatingCmd
+    OutsideAirDamperModulatingCmd
+    // Occupancy schedule state (true = occupied)
+    AtsOccupiedSp
+  }
+}
+
+// Occupancy mode commanded to a piece of equipment. ph has only the zone
+// version of this concrete spec (ZoneOccupiedSp), so we add a generic one here.
+AtsOccupiedSp : OccupiedSp {
+}
