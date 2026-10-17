@@ -78,9 +78,21 @@ export class HaystackClient {
     this.store?.set(this.token)
   }
 
-  logout() {
+  /**
+   * Forget the token here and ask Haxall to close the session (the standard Haystack `close` op), so the
+   * token stops working there too. Signing out never waits on or fails because of Haxall: the promise always resolves.
+   */
+  logout(): Promise<void> {
+    const token = this.token
     this.token = ''
     this.store?.clear()
+    if (!token) return Promise.resolve()
+    return fetch(`${this.base}/close`, {
+      method: 'POST',
+      credentials: 'omit', // see op()
+      headers: { Authorization: `BEARER authToken=${token}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ _kind: 'grid', meta: { ver: '3.0' }, cols: [], rows: [] }),
+    }).then(() => undefined, () => undefined)
   }
 
   // ---- low level -------------------------------------------------------------
@@ -109,6 +121,12 @@ export class HaystackClient {
       })
     } catch {
       throw new UnreachableError()
+    }
+    // 403 means two things in Haxall: a token it no longer knows (after a restart or a sign-out, sys.api::AuthErr)
+    // or a signed-in user who may not do this (sys.api::PermissionErr). Only the first ends the session.
+    if (res.status === 403) {
+      const denied = await permissionDenied(res)
+      if (denied !== null) throw new ApiError(name, denied)
     }
     if (res.status === 401 || res.status === 403) {
       this.token = ''
@@ -217,6 +235,17 @@ export class HaystackClient {
   /** Evaluate Axon and return the raw Hayson grid (used by the Node tools). */
   evalAxon(expr: string): Promise<RawGrid> {
     return this.op('eval', [{ expr }])
+  }
+}
+
+/** Haxall's message when a 403 is a missing permission rather than a dead session, otherwise null. */
+async function permissionDenied(res: Response): Promise<string | null> {
+  try {
+    const body = (await res.json()) as { spec?: unknown; dis?: unknown }
+    if (typeof body.spec !== 'string' || !body.spec.endsWith('::PermissionErr')) return null
+    return typeof body.dis === 'string' && body.dis ? body.dis : 'You do not have permission to do that.'
+  } catch {
+    return null // no readable body: treat it as the session ending, as before
   }
 }
 

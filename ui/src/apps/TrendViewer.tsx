@@ -27,8 +27,12 @@ function download(name: string, text: string) {
   const a = document.createElement('a')
   a.href = url
   a.download = name
+  a.hidden = true
+  // Firefox only follows a link that is on the page, and some browsers have not started reading the file
+  // when click() returns, so the link is removed and the file released a little later
+  document.body.appendChild(a)
   a.click()
-  URL.revokeObjectURL(url)
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url) }, 1000)
 }
 
 export function TrendViewer() {
@@ -123,6 +127,11 @@ export function TrendViewer() {
   const fetching = hisQs.some((q) => q.isFetching)
   const placeholder = hisQs.some((q) => q.isPlaceholderData)
   const firstError = hisQs.find((q) => q.isError)?.error ?? recsQ.error
+  // try again whatever failed: the point details as well as the histories
+  const retry = () => {
+    if (recsQ.isError) void recsQ.refetch()
+    hisQs.forEach((q) => void q.refetch())
+  }
   const window_: [number, number] | null = range ? (win ?? [range.startMs, range.endMs]) : null
   const samples = shownInputs.reduce((n, s) => n + s.ms.length, 0)
   const empties = inputs.filter((s) => s.ms.length === 0).map((s) => s.name)
@@ -165,7 +174,7 @@ export function TrendViewer() {
           ) : (
             <>
               {all.length > 0 && <SeriesLegend items={all} hidden={hidden} onToggle={toggleHidden} onRemove={(id) => toggle(id)} />}
-              {firstError ? <ErrorBanner error={firstError} onRetry={() => hisQs.forEach((q) => void q.refetch())} /> : null}
+              {firstError ? <ErrorBanner error={firstError} onRetry={retry} /> : null}
               {!range && <Empty title="No data to show yet" hint="Choose a range." />}
               {range && inputs.length === 0 && !firstError && <Loading label="Loading history…" />}
               {range && inputs.length > 0 && samples === 0 && (

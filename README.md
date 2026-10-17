@@ -88,7 +88,7 @@ Changes are saved to Haxall straight away, and the badges and tree update to mat
 
 ![Editing a record](docs/img/14-organization-edit.png)
 
-- **Move** puts equipment somewhere else (another equipment, or the top of any site) or a point into another equipment. Everything inside moves too, and moving to another site updates their site. The list never offers a place inside the thing being moved.
+- **Move** puts equipment somewhere else (another equipment, or the top of any site) or a point into another equipment. Everything inside moves too, and moving to another site updates their site (and the points' time zone, if the new site is in a different one). The list never offers a place inside the thing being moved.
 - **Delete** shows exactly what goes first (how many pieces of equipment and points, how many stored history samples) and which other records link to it. Those links can be cleaned up at the same time. A site also needs its name typed to confirm.
 
 ![Deleting equipment: what goes, and what links to it](docs/img/15-organization-delete.png)

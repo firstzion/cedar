@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = useCallback(() => {
-    client.logout()
+    void client.logout() // the page signs out at once; Haxall is told to close the session in the background
     qc.clear()
     setUser(null)
     setError(null)

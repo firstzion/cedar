@@ -36,6 +36,15 @@ test('a bad or missing token is rejected as AuthError', async () => {
   await assert.rejects(c.read('site'), AuthError)
 })
 
+test('after logout the old token no longer works on Haxall', async () => {
+  const c = await loggedIn()
+  const token = c.authToken
+  await c.about()
+  await c.logout()
+  const old = new HaystackClient({ origin, tokenStore: { get: () => token, set() {}, clear() {} } })
+  await assert.rejects(old.about(), AuthError)
+})
+
 test('read, readByIds and nav return decoded records', async () => {
   const c = await loggedIn()
   const sites = await c.read('site')

@@ -303,7 +303,8 @@ export async function planDelete(c: HaystackClient, root: HDict): Promise<Delete
   const records = [root, ...subtree.below]
   const ids = new Set(records.map((r) => refId(r.id)!))
   const equipIds = records.filter((r) => r.equip).map((r) => refId(r.id)!)
-  const dependents = root.site ? [] : await findDependents(c, equipIds, ids)
+  // for a site too: equipment in other sites can link to equipment in this one (a VAV served by an AHU here, say)
+  const dependents = await findDependents(c, equipIds, ids)
   const samples = records.reduce((n, r) => {
     const v = r.hisSize
     return n + (v && typeof v === 'object' && 'val' in v ? Number((v as { val: number }).val) : 0)
@@ -372,11 +373,18 @@ export async function moveRecord(c: HaystackClient, rec: HDict, target: MoveTarg
     if (refId(parent.siteRef) !== target.siteId) throw new RuleError('That equipment is in a different site.')
   }
   const siteChanged = refId(rec.siteRef) !== target.siteId
-  const rootChanges: RawTags = { siteRef: rawRef(target.siteId) }
+  // points keep their site's time zone (it decides how their history times are shown), so a new site may bring a new one
+  const newTz = siteChanged ? str((await readOne(c, target.siteId)).tz) : undefined
+  const siteTags = (r: HDict): RawTags => {
+    const t: RawTags = { siteRef: rawRef(target.siteId) }
+    if (newTz && r.point && str(r.tz) !== newTz) t.tz = newTz
+    return t
+  }
+  const rootChanges: RawTags = siteTags(rec)
   if (target.equipId) rootChanges.equipRef = rawRef(target.equipId)
   else if (rec.equipRef) rootChanges.equipRef = REMOVE
   const updates = [{ rec, changes: rootChanges }]
-  if (siteChanged) for (const r of below) updates.push({ rec: r, changes: { siteRef: rawRef(target.siteId) } })
+  if (siteChanged) for (const r of below) updates.push({ rec: r, changes: siteTags(r) })
   return (await updateRecords(c, updates)).length
 }
 

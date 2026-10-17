@@ -39,6 +39,27 @@ describe('HaystackClient error mapping', () => {
     expect(lost).toHaveBeenCalledOnce()
   })
 
+  it('403 for an expired token (AuthErr) ends the session', async () => {
+    const lost = vi.fn()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json({ spec: 'sys.api::AuthErr', status: 403, dis: 'Invalid or expired authToken' }, 403)))
+    const c = new HaystackClient({ tokenStore: memStore('tok'), onAuthLost: lost })
+    await expect(c.read('site')).rejects.toBeInstanceOf(AuthError)
+    expect(lost).toHaveBeenCalledOnce()
+  })
+
+  it('403 for a missing permission is an ApiError and keeps the session', async () => {
+    const store = memStore('tok')
+    const lost = vi.fn()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json({ spec: 'sys.api::PermissionErr', status: 403, dis: "Missing 'admin' permission: commit" }, 403)))
+    const c = new HaystackClient({ tokenStore: store, onAuthLost: lost })
+    const e = await c.op('commit').catch((x) => x)
+    expect(e).toBeInstanceOf(ApiError)
+    expect(e.message).toBe("Missing 'admin' permission: commit")
+    expect(c.isLoggedIn).toBe(true)
+    expect(store.value).toBe('tok')
+    expect(lost).not.toHaveBeenCalled()
+  })
+
   it('error grid -> ApiError with the server message', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(grid([], { err: { _kind: 'marker' }, dis: 'Unknown tag', errTrace: 'trace...' }))))
     const e = await new HaystackClient().read('bogus ==').catch((x) => x)
@@ -83,11 +104,29 @@ describe('HaystackClient requests', () => {
     expect(items[1].val).toBe(true)
   })
 
-  it('logout forgets the token', () => {
+  it('logout forgets the token and asks Haxall to close the session', async () => {
+    const f = vi.fn().mockResolvedValue(json(grid()))
+    vi.stubGlobal('fetch', f)
     const store = memStore('abc')
     const c = new HaystackClient({ tokenStore: store })
-    c.logout()
-    expect(c.isLoggedIn).toBe(false)
+    const done = c.logout()
+    expect(c.isLoggedIn).toBe(false) // straight away, without waiting for Haxall
     expect(store.value).toBeNull()
+    await done
+    const [url, init] = f.mock.calls[0]
+    expect(url).toBe('/api/sys/close')
+    expect(init.method).toBe('POST')
+    expect(init.credentials).toBe('omit')
+    expect(init.headers.Authorization).toBe('BEARER authToken=abc')
+  })
+
+  it('logout still signs out when Haxall cannot be reached, and sends nothing when already signed out', async () => {
+    const f = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'))
+    vi.stubGlobal('fetch', f)
+    const c = new HaystackClient({ tokenStore: memStore('abc') })
+    await expect(c.logout()).resolves.toBeUndefined()
+    expect(c.isLoggedIn).toBe(false)
+    await c.logout()
+    expect(f).toHaveBeenCalledOnce()
   })
 })

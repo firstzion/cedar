@@ -169,23 +169,40 @@ describe('Trend Viewer page', () => {
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
   })
 
+  it('Try again also retries the point details when those failed', async () => {
+    mocks.client.readByIds.mockRejectedValueOnce(new Error('details failed'))
+    setup('/trend-viewer?points=p1')
+    expect(await screen.findByText('details failed')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByTestId('chart')).toHaveTextContent('AHU-1 DischargeAirTempSensor:96')
+    expect(screen.queryByText('details failed')).toBeNull()
+  })
+
   it('exports a CSV of what is shown', async () => {
     const created: Blob[] = []
     const realCreate = URL.createObjectURL
     URL.createObjectURL = (b: Blob | MediaSource) => { created.push(b as Blob); return 'blob:x' }
-    URL.revokeObjectURL = () => {}
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const realRevoke = URL.revokeObjectURL
+    const revoke = vi.fn()
+    URL.revokeObjectURL = revoke
+    let linkOnPage = false
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { linkOnPage = document.body.contains(this) })
     try {
       setup('/trend-viewer?points=p1,p2')
       await waitFor(() => expect(screen.getByRole('button', { name: /Export CSV/ })).toBeEnabled())
       await userEvent.click(screen.getByRole('button', { name: /Export CSV/ }))
       expect(click).toHaveBeenCalled()
+      // some browsers only download from a link that is on the page, and need the file to stay available a moment
+      expect(linkOnPage).toBe(true)
+      expect(revoke).not.toHaveBeenCalled()
+      await waitFor(() => expect(revoke).toHaveBeenCalledWith('blob:x'), { timeout: 3000 })
       const text = await created[0].text()
       const lines = text.split('\r\n')
       expect(lines[0]).toBe('Timestamp,AHU-1 DischargeAirTempSensor (°F),AHU-1 OutsideAirTempSensor (°F)')
       expect(lines.length).toBe(96 + 2)
     } finally {
       URL.createObjectURL = realCreate
+      URL.revokeObjectURL = realRevoke
       click.mockRestore()
     }
   })

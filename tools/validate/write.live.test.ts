@@ -30,7 +30,7 @@ before(async () => {
 })
 after(async () => { await cleanup() })
 
-const newSite = (name: string) => createSite(c, { name, areaFt2: 12000, tz: 'Los_Angeles', geoAddr: '1 Test Way', geoCity: 'Seattle', geoState: 'WA' })
+const newSite = (name: string, tz = 'Los_Angeles') => createSite(c, { name, areaFt2: 12000, tz, geoAddr: '1 Test Way', geoCity: 'Seattle', geoState: 'WA' })
 
 test('every unit offered as a suggestion is one Haxall knows, spelled the way Haxall spells it', async () => {
   for (const u of COMMON_UNITS) assert.equal(await canonicalUnit(c, u), u, u)
@@ -190,9 +190,9 @@ test('move: rules, equipment into equipment, a point to another equipment', asyn
   await assert.rejects(moveRecord(c, await fresh(pt), { siteId: sid }), RuleError)
 })
 
-test('move equipment to another site: everything inside takes the new site', async () => {
+test('move equipment to another site: everything inside takes the new site and its time zone', async () => {
   const a = (await c.read(`site and dis=="${SITE_A}"`))[0]
-  const b = await newSite(SITE_B)
+  const b = await newSite(SITE_B, 'New_York')
   const [ahu] = await c.read(`ahu and navName=="Test AHU" and siteRef==@${id(a)}`)
   const before = await findSubtree(c, ahu)
   assert.ok(before.points.length >= 14)
@@ -201,6 +201,7 @@ test('move equipment to another site: everything inside takes the new site', asy
   const after = await findSubtree(c, await fresh(ahu))
   assert.equal(after.below.length, before.below.length)
   assert.ok([after.root, ...after.below].every((r) => refId(r.siteRef) === id(b)))
+  assert.ok(after.points.every((p) => str(p.tz) === 'New_York'), 'points take the new site\'s time zone')
   assert.equal((await c.read(`siteRef==@${id(a)} and navName=="Test AHU"`)).length, 0)
 })
 
@@ -239,8 +240,12 @@ test('without clearing links, the dependent shows a spec problem (honest, not hi
   assert.ok((await problems(now)).some((t) => t.includes('does not exist')))
 })
 
-test('deleting a site removes everything in it', async () => {
+test('deleting a site removes everything in it, and lists links from other sites', async () => {
+  const a = (await c.read(`site and dis=="${SITE_A}"`))[0]
   const b = (await c.read(`site and dis=="${SITE_B}"`))[0]
+  const host = await createEquipment(c, { name: 'Host AHU', siteId: id(b), spec: 'ats::AtsAhu', withPoints: false })
+  const vav = await createEquipment(c, { name: 'Cross-site VAV', siteId: id(a), spec: 'ats::AtsVav', withPoints: false, links: { airRef: id(host.equip) } })
+  assert.deepEqual((await planDelete(c, b)).dependents.map((d) => id(d)), [id(vav.equip)])
   const n = (await c.read(`siteRef==@${id(b)}`)).length
   const res = await deleteRecord(c, b, { clearLinks: false })
   assert.equal(res.removed, n + 1)
