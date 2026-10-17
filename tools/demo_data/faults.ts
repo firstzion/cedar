@@ -21,7 +21,7 @@ export function faultDefs(nowMs: number): FaultDef[] {
   const daysAgo = (n: number) => nowMs - n * DAY
   const mon56 = nextWeekdayMidnight(daysAgo(56), MON, tz)
   const mon35 = nextWeekdayMidnight(daysAgo(35), MON, tz)
-  const any47 = addDays(nextWeekdayMidnight(daysAgo(48), MON, tz), 0, tz)
+  const any47 = nextWeekdayMidnight(daysAgo(48), MON, tz)
   const sat21 = nextWeekdayMidnight(daysAgo(21), SAT, tz)
   const wed27 = nextWeekdayMidnight(daysAgo(27), WED, tz)
   const tue14 = nextWeekdayMidnight(daysAgo(14), 2, tz)

@@ -8,12 +8,30 @@ import { demoDataState, loadDemoData, removeDemoData } from './loader.ts'
 
 const [cmd = 'load', ...rest] = process.argv.slice(2)
 const flag = (n: string) => rest.includes(`--${n}`)
-const val = (n: string) => { const i = rest.indexOf(`--${n}`); return i >= 0 ? rest[i + 1] : undefined }
 const log = (s: string) => console.log(s)
 
+function fail(message: string): never {
+  console.error(message)
+  process.exit(2)
+}
+/** The value after --name, undefined if the option is not given; an option given without a value is an error. */
+const val = (n: string) => {
+  const i = rest.indexOf(`--${n}`)
+  if (i < 0) return undefined
+  const v = rest[i + 1]
+  if (v === undefined || v.startsWith('--')) fail(`--${n} needs a value`)
+  return v
+}
+
+if (!['load', 'ensure', 'reset'].includes(cmd)) fail(`unknown command: ${cmd} (use load, ensure or reset)`)
+const seedText = val('seed') ?? String(DEFAULT_SEED)
+if (!/^\d+$/.test(seedText)) fail(`--seed needs a whole number (0 or more), not "${seedText}"`)
+const seed = Number(seedText)
+const nowText = val('now')
+const nowMs = nowText === undefined ? Date.now() : Date.parse(nowText)
+if (Number.isNaN(nowMs)) fail(`--now needs a date and time such as 2026-10-16T08:00:00Z, not "${nowText}"`)
+
 const c = await clientFromEnv()
-const seed = Number(val('seed') ?? DEFAULT_SEED)
-const nowMs = val('now') ? Date.parse(val('now')!) : Date.now()
 
 async function fullLoad() {
   const t = Date.now()
@@ -37,9 +55,6 @@ if (cmd === 'load') {
     log(st.recs === 0 ? 'no demo data: loading' : `${st.pointsMissingHis} points have no history (Haxall restarted?): reloading`)
     await fullLoad()
   }
-} else if (cmd === 'reset') {
-  log(`removed ${await removeDemoData(c)} demo records`)
 } else {
-  console.error(`unknown command: ${cmd}`)
-  process.exit(2)
+  log(`removed ${await removeDemoData(c)} demo records`)
 }

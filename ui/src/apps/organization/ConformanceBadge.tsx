@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { conformanceOf, isDateTime, type HDict } from '@ssl/haystack'
+import { conformanceOf, isDateTime, refId, type HDict } from '@ssl/haystack'
 import { client } from '../../lib/client.ts'
-import { refId } from '@ssl/haystack'
 
 /** "Fits ats::AtsVav" or the list of what is missing or wrong. This is Xeto's validate() shown to a person. */
 export function ConformanceBadge({ rec }: { rec: HDict }) {

@@ -137,7 +137,8 @@ export function TrendViewer() {
 
   const exportCsv = () => {
     if (!window_) return
-    const f = (ms: number) => iso(ms, iana).slice(0, 16).replace(/[:T]/g, '')
+    // site time, day and time kept apart: 2026-10-16_0800
+    const f = (ms: number) => iso(ms, iana).slice(0, 16).replace('T', '_').replace(':', '')
     download(`trend-viewer_${f(window_[0])}_${f(window_[1])}.csv`, toCsv(shownInputs, window_[0], window_[1], iana))
   }
   const coverage = (r: HDict | undefined) => (r && isDateTime(r.hisStart) && isDateTime(r.hisEnd)

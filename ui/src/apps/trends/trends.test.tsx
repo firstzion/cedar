@@ -186,7 +186,11 @@ describe('Trend Viewer page', () => {
     const revoke = vi.fn()
     URL.revokeObjectURL = revoke
     let linkOnPage = false
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { linkOnPage = document.body.contains(this) })
+    let fileName = ''
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      linkOnPage = document.body.contains(this)
+      fileName = this.download
+    })
     try {
       setup('/trend-viewer?points=p1,p2')
       await waitFor(() => expect(screen.getByRole('button', { name: /Export CSV/ })).toBeEnabled())
@@ -194,6 +198,7 @@ describe('Trend Viewer page', () => {
       expect(click).toHaveBeenCalled()
       // some browsers only download from a link that is on the page, and need the file to stay available a moment
       expect(linkOnPage).toBe(true)
+      expect(fileName).toMatch(/^trend-viewer_\d{4}-\d{2}-\d{2}_\d{4}_\d{4}-\d{2}-\d{2}_\d{4}\.csv$/)
       expect(revoke).not.toHaveBeenCalled()
       await waitFor(() => expect(revoke).toHaveBeenCalledWith('blob:x'), { timeout: 3000 })
       const text = await created[0].text()

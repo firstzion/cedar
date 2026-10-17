@@ -101,7 +101,7 @@ Good to know:
 ### Trend Viewer: charts
 Tick up to 10 points in the picker (or press **Open in Trend Viewer** in Site Organization), pick a date range, and read the chart. By default each unit gets its own panel and axis, all sharing one time axis and zoom (the *Overlay* button puts everything on one plot instead). Scroll over the chart, or drag the bar beneath it, to zoom; **Reset zoom** appears when you have. Hover for every point's exact value at that time. **Table** shows the same numbers and **Export CSV** saves them.
 
-Each planted fault is easy to spot. The exact times of the current load are in `tools/demo_data/faults.json`.
+Each planted fault is easy to spot. The exact times of the current load are in `tools/demo_data/faults.json`, which every load writes afresh (it is not stored in git).
 
 | # | Fault | Where | What you see |
 |---|---|---|---|
@@ -140,7 +140,9 @@ The address bar holds the whole Trend Viewer view too (`?points=...&range=...&vi
 | `make load` | Wipe and reload the demo building and histories (`make load SEED=7` for different data) |
 | `make specs` | After editing files in `specs/`: restart Haxall, check the `ats` library compiles, reload demo data |
 | `make axon E='libs()'` | Run one Axon expression and print the result |
-| `make test` | Run every test: unit tests, type check, and live checks against Haxall (Haxall must be running) |
+| `make check` | Lint, type check and unit tests. Needs no Haxall; GitHub runs the same checks on every push |
+| `make lint` | Just the linter (oxlint), which looks for likely bugs |
+| `make test` | Everything: `make check`, then the live tests against Haxall (Haxall must be running) |
 | `make screenshots` | Retake the pictures in this README (needs `make ui` running and Chrome, Brave or Edge). `SHOT_THEME=dark` takes dark ones |
 | `make build-ui` | Production build of the web app into `ui/dist` |
 | `make reset` | **Deletes the Haxall database**, starts fresh and reloads the demo data |

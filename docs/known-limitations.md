@@ -30,7 +30,7 @@ Things that work differently from what you might expect, or are deliberately not
 - **Haxall has no cross-origin support.** The browser talks to Haxall through the dev server. A production build needs a proxy in front of it (not set up).
 
 ## The demo data
-- **Dates are relative to the moment you load.** The 90 days end "now" (rounded to 15 minutes). Fault dates therefore move on every load; `faults.json` has the exact times.
+- **Dates are relative to the moment you load.** The 90 days end "now" (rounded to 15 minutes). Fault dates therefore move on every load; `faults.json` (written by each load, not kept in git) has the exact times.
 - **Simplified building physics.** Occupancy is 6am-6pm on weekdays (no holidays), weather is a smooth seasonal curve plus a daily cycle, and the control logic is intentionally simple. The data is realistic enough to look like a building, not a calibrated model.
 - **Simulated sensor faults do not feed back into control**; they alter only the recorded values.
 - **VAVs are siblings of AHUs in the tree.** They reference their AHU with `airRef` (a "fed by" link), not `equipRef` ("contained in"), which is the Haystack 4 convention. Nesting by `equipRef` works for data that uses it.

@@ -79,6 +79,8 @@ export async function scramLogin(url: string, username: string, password: string
 
   // 2. client-first
   const nonce = b64(crypto.getRandomValues(new Uint8Array(18)))
+  // The username goes in as is. SCRAM (RFC 5802) would write "," and "=" as =2C and =3D, but Haxall rebuilds this
+  // message from the raw username when it checks the proof, so escaping here would make those logins fail.
   const clientFirstBare = `n=${username},r=${nonce}`
   res = await get(url, `SCRAM handshakeToken=${handshake}, data=${b64u(enc.encode('n,,' + clientFirstBare))}`)
   if (res.status !== 401) throw new AuthError(`Unexpected status ${res.status} to client-first`)

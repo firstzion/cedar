@@ -44,6 +44,8 @@ export function EditDialog({ rec, onClose, onDone }: { rec: HDict; onClose(): vo
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
+    if (busy) return
+    setBusy(true) // straight away: the unit check below waits for Haxall, and a second click must not save twice
     const { changes, errors } = diffTags(rec, edits)
     const nameDraft = edits[nameTag]
     if (!nameDraft || !nameDraft.text.trim()) errors[nameTag] = 'The name cannot be empty'
@@ -55,9 +57,8 @@ export function EditDialog({ rec, onClose, onDone }: { rec: HDict; onClose(): vo
       else changes[t] = { ...(changes[t] as Record<string, unknown>), unit: canon }
     }
     setProblems(errors)
-    if (Object.keys(errors).length) return
+    if (Object.keys(errors).length) { setBusy(false); return }
     if (Object.keys(changes).length === 0) return onClose()
-    setBusy(true)
     setErr(null)
     try {
       await updateRecord(client, rec, changes)

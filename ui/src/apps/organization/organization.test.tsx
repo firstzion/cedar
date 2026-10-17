@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useNavigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ApiError, MARKER, type HDict } from '@ssl/haystack'
 
@@ -155,6 +155,21 @@ describe('Site Organization', () => {
     setup('/site-organization?filter=point+and+%3D%3D')
     expect(await screen.findByText(/Expecting tag name/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
+  })
+
+  it('Back shows the filter that is running again, not the one typed last', async () => {
+    function Back() { const nav = useNavigate(); return <button onClick={() => void nav(-1)}>Back</button> }
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter initialEntries={['/site-organization?filter=equip', '/site-organization?filter=point+and+his']} initialIndex={1}>
+          <SiteOrganization /><Back />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    expect(await screen.findByLabelText('Haystack filter')).toHaveValue('point and his')
+    await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await waitFor(() => expect(screen.getByLabelText('Haystack filter')).toHaveValue('equip'))
   })
 
   it('empty filter result is explained', async () => {

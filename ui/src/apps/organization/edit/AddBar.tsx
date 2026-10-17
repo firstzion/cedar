@@ -5,9 +5,8 @@ import { AddPointDialog } from './AddPointDialog.tsx'
 import { AddSiteDialog } from './AddSiteDialog.tsx'
 
 /** "+ Site", "+ Equipment" and "+ Point" above the tree. Equipment and points go into whatever is selected. */
-export function AddBar({ selected, siteId, notify, goTo, onSiteCreated }: {
+export function AddBar({ selected, notify, goTo, onSiteCreated }: {
   selected: HDict | null
-  siteId: string | undefined
   notify(message: string): void
   goTo(id: string | null): void
   onSiteCreated(site: HDict): void
@@ -35,7 +34,6 @@ export function AddBar({ selected, siteId, notify, goTo, onSiteCreated }: {
       {open === 'point' && selected && isEquip && (
         <AddPointDialog equip={selected} onClose={close} onDone={(p, m) => { close(); notify(m); if (p) goTo(refId(p.id) ?? null) }} />
       )}
-      {!siteId && null}
     </div>
   )
 }

@@ -48,7 +48,7 @@ export function MoveDialog({ rec, onClose, onDone }: { rec: HDict; onClose(): vo
   const data = useQuery({
     queryKey: ['move-options', id], retry: false,
     queryFn: async () => {
-      const [sites, equips, sub] = await Promise.all([client.read('site'), client.read('equip', 2000), rec.equip ? findSubtree(client, rec) : Promise.resolve(null)])
+      const [sites, equips, sub] = await Promise.all([client.read('site'), client.read('equip'), rec.equip ? findSubtree(client, rec) : Promise.resolve(null)])
       return { sites, equips, below: sub?.below ?? [] }
     },
   })

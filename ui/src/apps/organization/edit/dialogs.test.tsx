@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ApiError, ConflictError, MARKER, RuleError, type HDict } from '@ssl/haystack'
+import { ApiError, ConflictError, friendlyMessage, MARKER, RuleError, type HDict } from '@ssl/haystack'
 
 const w = vi.hoisted(() => ({
   createSite: vi.fn(), createEquipment: vi.fn(), createPoint: vi.fn(), updateRecord: vi.fn(), moveRecord: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock('@ssl/haystack', async (orig) => ({ ...(await orig<typeof import('@ssl/h
 vi.mock('../../../lib/client.ts', () => ({ client: w.client }))
 
 import { AddEquipDialog } from './AddEquipDialog.tsx'
-import { AddPointDialog, missingSpecs } from './AddPointDialog.tsx'
+import { AddPointDialog } from './AddPointDialog.tsx'
 import { AddSiteDialog } from './AddSiteDialog.tsx'
 import { AddBar } from './AddBar.tsx'
 import { DeleteDialog } from './DeleteDialog.tsx'
@@ -177,24 +177,21 @@ describe('AddEquipDialog', () => {
 })
 
 describe('AddPointDialog', () => {
-  const item = (text: string) => ({ subject: 'ahu1', slot: 'points._0', level: 'err' as const, rule: 'sys::missingSlot', msg: text, text })
+  // a "missing required point" problem as parseValidation makes it from Haxall's message
+  const item = (spec: string) => {
+    const msg = `Missing required Point: ${spec}`
+    return { subject: 'ahu1', slot: 'points._0', level: 'err' as const, rule: 'sys::missingSlot', msg, text: friendlyMessage(msg) }
+  }
   const open = () => {
     const onDone = vi.fn()
     ui(<AddPointDialog equip={ahu} onClose={() => {}} onDone={onDone} />)
     return onDone
   }
 
-  it('finds the spec names in "Missing required point" messages', () => {
-    expect(missingSpecs([
-      'Missing required point: Mixed Air Temp Sensor (ph.points.sugar::MixedAirTempSensor)',
-      'Missing required point: Ats Occupied Sp (ats::AtsOccupiedSp)', 'Missing required tag: tz',
-    ])).toEqual(['ph.points.sugar::MixedAirTempSensor', 'ats::AtsOccupiedSp'])
-  })
-
   it('offers to add every missing required point at once', async () => {
     w.client.validateRec.mockResolvedValue([
-      item('Missing required point: Mixed Air Temp Sensor (ph.points.sugar::MixedAirTempSensor)'),
-      item('Missing required point: Return Air Temp Sensor (ph.points.sugar::ReturnAirTempSensor)'),
+      item('ph.points.sugar::MixedAirTempSensor'),
+      item('ph.points.sugar::ReturnAirTempSensor'),
     ])
     w.createPoint.mockResolvedValue({ id: ref('np') })
     const onDone = open()
@@ -206,7 +203,7 @@ describe('AddPointDialog', () => {
   })
 
   it('adds one missing point with its own button', async () => {
-    w.client.validateRec.mockResolvedValue([item('Missing required point: Return Air Temp Sensor (ph.points.sugar::ReturnAirTempSensor)')])
+    w.client.validateRec.mockResolvedValue([item('ph.points.sugar::ReturnAirTempSensor')])
     w.createPoint.mockResolvedValue({ id: ref('np') })
     const onDone = open()
     await userEvent.click(await screen.findByRole('button', { name: 'add' }))
@@ -233,6 +230,31 @@ describe('AddPointDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Add point' }))
     await waitFor(() => expect(onDone).toHaveBeenCalled())
     expect(w.createPoint).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ spec: 'ph.points.sugar::MixedAirTempSensor', unit: '°C', his: true }))
+  })
+
+  it('a second click while the unit is being checked does not add a second point', async () => {
+    let answer: (u: string) => void = () => {}
+    w.canonicalUnit.mockImplementation(() => new Promise<string>((r) => { answer = r }))
+    w.createPoint.mockResolvedValue({ id: ref('np') })
+    const onDone = open()
+    await userEvent.click(await screen.findByRole('button', { name: /Mixed Air Temp Sensor/ }))
+    await userEvent.type(screen.getByLabelText(/Unit \(optional\)/), '°C')
+    const button = screen.getByRole('button', { name: 'Add point' })
+    await userEvent.click(button)
+    await userEvent.click(button)
+    expect(screen.getByRole('button', { name: 'Working…' })).toBeDisabled()
+    answer('°C')
+    await waitFor(() => expect(onDone).toHaveBeenCalled())
+    expect(w.createPoint).toHaveBeenCalledTimes(1)
+  })
+
+  it('when "Add all" fails part way, the page is refreshed so the points already added show', async () => {
+    w.client.validateRec.mockResolvedValue([item('ph.points.sugar::MixedAirTempSensor'), item('ph.points.sugar::ReturnAirTempSensor')])
+    w.createPoint.mockResolvedValueOnce({ id: ref('np') }).mockRejectedValueOnce(new ApiError('commit', 'boom'))
+    open()
+    await userEvent.click(await screen.findByRole('button', { name: 'Add all 2' }))
+    expect(await screen.findByText('boom')).toBeInTheDocument()
+    await waitFor(() => expect(w.client.validateRec).toHaveBeenCalledTimes(2)) // checked again after the refresh
   })
 
   it('stores Haxall\'s own spelling of a unit', async () => {
@@ -497,7 +519,7 @@ describe('DeleteDialog', () => {
 })
 
 describe('AddBar', () => {
-  const bar = (selected: HDict | null) => ui(<AddBar selected={selected} siteId="s1" notify={() => {}} goTo={() => {}} onSiteCreated={() => {}} />)
+  const bar = (selected: HDict | null) => ui(<AddBar selected={selected} notify={() => {}} goTo={() => {}} onSiteCreated={() => {}} />)
 
   it('sites can always be added; equipment needs a site or equipment; points need equipment', () => {
     bar(siteRec)

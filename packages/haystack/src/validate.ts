@@ -18,12 +18,21 @@ export type Conformance =
 /** "DischargeAirTempSensor" -> "Discharge Air Temp Sensor" */
 export const humanize = (name: string) => name.replace(/([a-z0-9])([A-Z])/g, '$1 $2')
 
+// Haxall's wording when an equipment lacks one of the points its spec requires
+const MISSING_POINT = /^Missing required Point: (.+)::(.+)$/
+
+/** The point spec a "missing required point" problem asks for, such as ph.points.sugar::MixedAirTempSensor. */
+export function missingPointSpec(item: Pick<ValidationItem, 'msg'>): string | undefined {
+  const m = MISSING_POINT.exec(item.msg)
+  return m ? `${m[1]}::${m[2]}` : undefined
+}
+
 export function friendlyMessage(msg: string, rule = ''): string {
   let m: RegExpMatchArray | null
   if (rule === 'sys::missingSpecRef' || msg.startsWith("Missing 'spec' ref tag")) return 'No spec is assigned to this record (it has no spec tag).'
   if ((m = msg.match(/^Unknown 'spec' ref: (.+)$/))) return `The spec ${m[1]} is not available in this Haxall. Is its library enabled?`
   if ((m = msg.match(/^Missing required slot '(.+)'$/))) return `Missing required tag: ${m[1]}`
-  if ((m = msg.match(/^Missing required Point: (.+)::(.+)$/))) return `Missing required point: ${humanize(m[2])} (${m[1]}::${m[2]})`
+  if ((m = msg.match(MISSING_POINT))) return `Missing required point: ${humanize(m[2])} (${m[1]}::${m[2]})`
   if ((m = msg.match(/^Missing required choice '(.+)'$/))) return `Missing a required choice from ${m[1]}`
   if ((m = msg.match(/^Unresolved ref @(.+)$/))) return `Points to a record that does not exist: @${m[1]}`
   return msg

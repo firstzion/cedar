@@ -6,3 +6,5 @@ dbs/
 dist/
 node_modules/
 ui/dist
+# written by every demo load (make up / make load): the fault times of the current load
+tools/demo_data/faults.json

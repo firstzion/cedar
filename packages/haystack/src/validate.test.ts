@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { conformanceOf, errorCounts, friendlyMessage, humanize, parseValidation } from './validate.ts'
+import { conformanceOf, errorCounts, friendlyMessage, humanize, missingPointSpec, parseValidation } from './validate.ts'
 import { decodeGrid } from './values.ts'
 
 const row = (o: Record<string, unknown>) => ({
@@ -43,5 +43,13 @@ describe('conformance', () => {
     const m = errorCounts(items([row({}), row({}), row({ subject: { _kind: 'ref', val: 'r2' } }), row({ level: 'warn' })]))
     expect(m.get('r1')).toBe(2)
     expect(m.get('r2')).toBe(1)
+  })
+})
+
+describe('missingPointSpec', () => {
+  it('reads the point spec from Haxall\'s message, not from the wording shown to people', () => {
+    expect(missingPointSpec({ msg: 'Missing required Point: ph.points.sugar::MixedAirTempSensor' })).toBe('ph.points.sugar::MixedAirTempSensor')
+    expect(missingPointSpec({ msg: 'Missing required Point: ats::AtsOccupiedSp' })).toBe('ats::AtsOccupiedSp')
+    expect(missingPointSpec({ msg: "Missing required slot 'tz'" })).toBeUndefined()
   })
 })

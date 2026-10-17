@@ -58,10 +58,11 @@ export function SiteOrganization() {
           <button type="button" className="link" onClick={() => setNotice(null)} aria-label="Dismiss">dismiss</button>
         </div>
       )}
-      <FilterBar value={filter} onRun={(f) => update({ filter: f })} onClear={() => update({ filter: null })} />
+      {/* keyed by the filter in the address, so Back and Forward show the filter that is actually running */}
+      <FilterBar key={filter ?? ''} value={filter} onRun={(f) => update({ filter: f })} onClear={() => update({ filter: null })} />
       <div className="org-body">
         <nav className="pane" aria-label="Navigation">
-          <AddBar selected={shownRec} siteId={siteId} notify={notify} goTo={goTo}
+          <AddBar selected={shownRec} notify={notify} goTo={goTo}
             onSiteCreated={(s) => { const id = refId(s.id); if (id) { setSiteId(id); update({ sel: id, filter: null }) } }} />
           {filter
             ? <FilterResults filter={filter} selectedId={sel} onSelect={(id) => update({ sel: id })} />

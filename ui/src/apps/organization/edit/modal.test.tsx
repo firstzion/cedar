@@ -4,13 +4,13 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Modal } from './Modal.tsx'
 
-function Host({ onClose = () => {} }: { onClose?: () => void }) {
+function Host({ onClose = () => {}, closable = true }: { onClose?: () => void; closable?: boolean }) {
   const [open, setOpen] = useState(false)
   return (
     <div>
       <button onClick={() => setOpen(true)}>open it</button>
       {open && (
-        <Modal title="Test dialog" onClose={() => { setOpen(false); onClose() }}>
+        <Modal title="Test dialog" onClose={() => { setOpen(false); onClose() }} closable={closable}>
           <input aria-label="first" /><button>middle</button><button>last</button>
         </Modal>
       )}
@@ -53,5 +53,16 @@ describe('Modal', () => {
     const backdrop = document.querySelector('.modal-backdrop') as HTMLElement
     await userEvent.pointer([{ target: backdrop, keys: '[MouseLeft]' }])
     expect(onClose).toHaveBeenCalledTimes(2)
+  })
+
+  it('stays open while something is being saved: no Esc, no outside click, no ×', async () => {
+    const onClose = vi.fn()
+    render(<Host onClose={onClose} closable={false} />)
+    await userEvent.click(screen.getByRole('button', { name: 'open it' }))
+    await userEvent.keyboard('{Escape}')
+    await userEvent.pointer([{ target: document.querySelector('.modal-backdrop') as HTMLElement, keys: '[MouseLeft]' }])
+    expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled()
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 })

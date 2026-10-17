@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { canonicalUnit, createPoint, displayName, humanize, refId, type HDict } from '@ssl/haystack'
+import { canonicalUnit, createPoint, displayName, humanize, missingPointSpec, refId, type HDict } from '@ssl/haystack'
 import { client } from '../../../lib/client.ts'
 import { ErrorBanner } from '../../../components/Status.tsx'
 import { DialogButtons, Modal } from './Modal.tsx'
@@ -11,20 +11,13 @@ import { COMMON_UNITS } from './units.ts'
 const MAX_SHOWN = 12
 const lastName = (spec: string) => spec.split('::')[1] ?? spec
 
-/** Pull the spec names out of "Missing required point: ..." checks of an equipment. */
-export function missingSpecs(texts: string[]): string[] {
-  return texts.flatMap((t) => {
-    const m = /\(([A-Za-z0-9_.]+::[A-Za-z0-9_]+)\)\s*$/.exec(t)
-    return m ? [m[1]] : []
-  })
-}
-
 export function AddPointDialog({ equip, onClose, onDone }: { equip: HDict; onClose(): void; onDone(point: HDict | null, message: string): void }) {
   const equipId = refId(equip.id)!
   const refresh = useRefreshAll()
   const specs = usePointSpecs()
   const check = useQuery({ queryKey: ['conformance-for-add', equipId], queryFn: () => client.validateRec(equipId), retry: false })
-  const missing = useMemo(() => missingSpecs((check.data ?? []).filter((i) => /Missing required point/.test(i.text)).map((i) => i.text)), [check.data])
+  // the point specs Haxall says this equipment still needs (each once)
+  const missing = useMemo(() => [...new Set((check.data ?? []).flatMap((i) => missingPointSpec(i) ?? []))], [check.data])
 
   const [custom, setCustom] = useState(false)
   const [search, setSearch] = useState('')
@@ -54,6 +47,8 @@ export function AddPointDialog({ equip, onClose, onDone }: { equip: HDict; onClo
     } catch (x) {
       setErr(x)
       setBusy(false)
+      // "Add all" may have created some points before one failed: show those
+      void refresh()
     }
   }
 
@@ -65,6 +60,8 @@ export function AddPointDialog({ equip, onClose, onDone }: { equip: HDict; onClo
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
+    if (busy) return
+    setBusy(true) // straight away: the unit check below waits for Haxall, and a second click must not add a second point
     const p: Record<string, string> = {}
     if (!custom && !spec) p.spec = 'Choose a point type from the list'
     if (!name.trim()) p.name = 'Give the point a name'
@@ -77,7 +74,7 @@ export function AddPointDialog({ equip, onClose, onDone }: { equip: HDict; onClo
       if (!canon) p.unit = `Haxall does not know the unit “${u}”`
     }
     setProblems(p)
-    if (Object.keys(p).length) return
+    if (Object.keys(p).length) { setBusy(false); return }
     await run(async () => {
       const point = await createPoint(client, { name: name.trim(), equipId, spec: custom ? undefined : spec, kind: custom ? kind : undefined, unit: canon, his })
       return { point, message: `Added ${name.trim()}.` }
