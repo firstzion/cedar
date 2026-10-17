@@ -54,7 +54,7 @@ export function buildOption(a: BuildArgs): EChartsCoreOption {
         const panelH = (height - top - bottom - gap * (n - 1)) / n
         return { left: 64, right: 24, top: top + i * (panelH + gap), height: panelH }
       })
-    : [{ left: 64 + 56 * Math.max(0, Math.ceil((n - 1) / 2) - 1) * 0, right: 24, top, height: height - top - bottom }]
+    : [{ left: 64, right: 24, top, height: height - top - bottom }] // overlay: the sides are widened for extra axes below
 
   // overlay: spread extra y axes to both sides
   const leftCount = Math.ceil(n / 2)

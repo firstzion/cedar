@@ -2,11 +2,13 @@
 // so Node can run it directly.
 import { clientFromEnv } from '../../packages/haystack/src/node.ts'
 import type { HaystackClient } from '../../packages/haystack/src/client.ts'
+import { rawMarker, rawRef } from '../../packages/haystack/src/values.ts'
 
 export const LIB = 'ats'
 export const TEST_TAG = 'sslTest'
-export const marker = { _kind: 'marker' }
-export const ref = (val: string) => ({ _kind: 'ref', val })
+// short names used by the tools and tests
+export const marker = rawMarker
+export const ref = rawRef
 
 /** Standard libs our specs depend on; they are not enabled in a fresh Haxall. */
 export const REQUIRED_LIBS = ['ph.points', 'ph.points.sugar', 'ph.elec', LIB]

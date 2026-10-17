@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  // Lint rules for the whole repo (npm run lint). Correctness rules only: things that are likely bugs.
+  "plugins": ["typescript", "react", "unicorn", "oxc", "import", "vitest"],
+  "categories": { "correctness": "error" },
+  "rules": {
+    // new Array(n) is used on purpose to size large history arrays up front
+    "unicorn/no-new-array": "off",
+    // test mocks are typed by what they stand in for; spelling the type out on every vi.fn() adds nothing
+    "vitest/require-mock-type-parameters": "off",
+    "react-hooks/exhaustive-deps": "error",
+    "react-hooks/rules-of-hooks": "error"
+  },
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**"]
+}

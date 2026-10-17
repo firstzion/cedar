@@ -35,15 +35,18 @@ axon:    ## run one Axon expression:  make axon E='libs()'
 spike:   ## check login + about + eval against the running Haxall
 	npm run -s spike
 
-.PHONY: specs test
+.PHONY: specs test check lint
 specs:   ## reload Xeto specs (restarts Haxall) and check the ats lib compiles
 	docker restart skyspark_lite_haxall > /dev/null
 	@$(WAIT)
 	node --env-file=.env --experimental-strip-types tools/validate/check-lib.ts
 	npm run -s demo:ensure
-test:    ## run all tests (Haxall must be running)
-	npx vitest run
-	npm run -s typecheck -w @ssl/ui
+check:   ## lint, type check and unit tests (no Haxall needed; GitHub runs these on every push)
+	npm run -s check
+lint:    ## look for likely bugs in the code (oxlint)
+	npm run -s lint
+test:    ## run everything: the checks above, then the live tests (Haxall must be running)
+	npm run -s check
 	node --env-file=.env --experimental-strip-types --test --test-concurrency=1 "tools/**/*.test.ts"
 
 .PHONY: load demo-reset

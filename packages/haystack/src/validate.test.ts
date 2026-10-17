@@ -31,11 +31,8 @@ describe('conformance', () => {
   })
   it('issues lists only errors with plain text', () => {
     const c = conformanceOf(rec('ats::AtsVav'), items([row({ msg: "Missing required slot 'tz'", slot: 'tz' }), row({ level: 'warn' })]))
-    expect(c.status).toBe('issues')
-    if (c.status === 'issues') {
-      expect(c.items).toHaveLength(1)
-      expect(c.items[0].text).toBe('Missing required tag: tz')
-    }
+    expect(c).toMatchObject({ status: 'issues', items: [{ text: 'Missing required tag: tz' }] })
+    expect(c.status === 'issues' && c.items).toHaveLength(1)
   })
   it('no spec tag -> nospec', () => {
     expect(conformanceOf(rec(), []).status).toBe('nospec')

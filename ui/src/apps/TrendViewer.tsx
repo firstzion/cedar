@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query'
 import { displayName, ianaFromHaystack, isDateTime, iso, refId, str, type HDict } from '@ssl/haystack'
@@ -11,7 +11,7 @@ import { HistoryTable } from './trends/HistoryTable.tsx'
 import { PointPicker } from './trends/PointPicker.tsx'
 import { RangeBar } from './trends/RangeBar.tsx'
 import { resolveRange } from './trends/ranges.ts'
-import { kindOfValues, prepare, toCsv, type Kind, type SeriesInput } from './trends/series.ts'
+import { assignSlots, kindOfValues, prepare, toCsv, type Kind, type SeriesInput } from './trends/series.ts'
 import { SeriesLegend } from './trends/SeriesLegend.tsx'
 import { useDark } from './trends/useDark.ts'
 import { MAX_POINTS, readState, writeState } from './trends/url.ts'
@@ -44,7 +44,6 @@ export function TrendViewer() {
   const [win, setWin] = useState<[number, number] | null>(null)
   const [resetKey, setResetKey] = useState(0)
   const [drawMs, setDrawMs] = useState<number | null>(null)
-  const slots = useRef(new Map<string, number>()) // point id -> colour slot, kept while the point stays selected
 
   const update = (c: Parameters<typeof writeState>[1]) => setParams(writeState(params, c), { replace: true })
   const tzName = str(site?.tz) ?? 'UTC'
@@ -98,20 +97,19 @@ export function TrendViewer() {
   }, [sig, idsKey, recs, site])
 
   // stable colours: a point keeps its colour while others are added or removed
-  for (const id of [...slots.current.keys()]) if (!state.points.includes(id)) slots.current.delete(id)
-  for (const id of state.points) {
-    if (!slots.current.has(id)) {
-      const used = new Set(slots.current.values())
-      let n = 0
-      while (used.has(n)) n++
-      slots.current.set(id, n)
-    }
+  // (worked out again only when the chosen points change; React re-renders straight away with the new value)
+  const [slots, setSlots] = useState(() => assignSlots(new Map(), state.points))
+  const [slotsFor, setSlotsFor] = useState(idsKey)
+  if (slotsFor !== idsKey) {
+    setSlotsFor(idsKey)
+    setSlots(assignSlots(slots, state.points))
   }
   const all = useMemo<PlotSeries[]>(() => inputs.map((s) => {
-    const slot = slots.current.get(s.id) ?? 0
+    const slot = slots.get(s.id) ?? 0
     return { prep: prepare(s), color: cssColor(slot % SLOTS), dashed: slot >= SLOTS }
+  // the colours are read from the page's CSS, which changes with `dark`
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [inputs, dark])
+  }), [inputs, slots, dark])
   // keep these arrays stable between renders: the chart rebuilds (and forgets its zoom) whenever `shown` changes
   const shown = useMemo(() => all.filter((s) => !hidden.has(s.prep.id)), [all, hidden])
   const shownInputs = useMemo(() => inputs.filter((s) => !hidden.has(s.id)), [inputs, hidden])

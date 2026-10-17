@@ -20,7 +20,7 @@ export const humanize = (name: string) => name.replace(/([a-z0-9])([A-Z])/g, '$1
 
 export function friendlyMessage(msg: string, rule = ''): string {
   let m: RegExpMatchArray | null
-  if (rule === 'sys::missingSpecRef' || /^Missing 'spec' ref tag/.test(msg)) return 'No spec is assigned to this record (it has no spec tag).'
+  if (rule === 'sys::missingSpecRef' || msg.startsWith("Missing 'spec' ref tag")) return 'No spec is assigned to this record (it has no spec tag).'
   if ((m = msg.match(/^Unknown 'spec' ref: (.+)$/))) return `The spec ${m[1]} is not available in this Haxall. Is its library enabled?`
   if ((m = msg.match(/^Missing required slot '(.+)'$/))) return `Missing required tag: ${m[1]}`
   if ((m = msg.match(/^Missing required Point: (.+)::(.+)$/))) return `Missing required point: ${humanize(m[2])} (${m[1]}::${m[2]})`

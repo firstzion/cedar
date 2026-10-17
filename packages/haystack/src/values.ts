@@ -124,6 +124,9 @@ export const COMMON_TIMEZONES = Object.keys(IANA)
 
 // ---- encoding for requests ---------------------------------------------------
 
-export const ref = (id: string) => ({ _kind: 'ref', val: id })
-export const marker = { _kind: 'marker' }
-export const num = (val: number, unit?: string) => (unit ? { _kind: 'number', val, unit } : { _kind: 'number', val })
+export const rawMarker = { _kind: 'marker' } as const
+export const rawRef = (id: string) => ({ _kind: 'ref', val: id })
+export const rawNumber = (val: number, unit?: string) => (unit ? { _kind: 'number', val, unit } : { _kind: 'number', val })
+
+/** Record ids are put into Axon text and filters, so only the characters Haxall ids really use are allowed. */
+export const isRecordId = (id: string) => /^[A-Za-z0-9_.:~-]+$/.test(id)

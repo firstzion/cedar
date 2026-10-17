@@ -31,7 +31,7 @@ function finishPoints(recs: Rec[]): Rec[] {
 
 test('ats lib compiles', async () => {
   const s = await libStatus(c)
-  assert.equal(s?.libStatus, 'ok', s?.err)
+  assert.equal(s?.libStatus, 'ok', s?.err ?? 'ats lib not found')
 })
 
 test('all ats specs exist', async () => {

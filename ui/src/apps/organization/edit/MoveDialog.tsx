@@ -80,7 +80,7 @@ export function MoveDialog({ rec, onClose, onDone }: { rec: HDict; onClose(): vo
   }
 
   return (
-    <Modal title={`Move ${displayName(rec)}`} onClose={onClose}>
+    <Modal title={`Move ${displayName(rec)}`} onClose={onClose} closable={!busy}>
       <form onSubmit={submit}>
         {err ? <ErrorBanner error={err} /> : null}
         {data.isLoading && <Loading label="Loading places to move to…" />}

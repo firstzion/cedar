@@ -85,7 +85,7 @@ export function AddPointDialog({ equip, onClose, onDone }: { equip: HDict; onClo
   }
 
   return (
-    <Modal title={`Add a point to ${displayName(equip)}`} onClose={onClose} wide>
+    <Modal title={`Add a point to ${displayName(equip)}`} onClose={onClose} closable={!busy} wide>
       {err ? <ErrorBanner error={err} /> : null}
       {missing.length > 0 && (
         <section className="callout" aria-label="Required points that are missing">

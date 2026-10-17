@@ -42,7 +42,7 @@ export function DeleteDialog({ rec, onClose, onDone }: { rec: HDict; onClose(): 
 
   const part = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
   return (
-    <Modal title={`Delete ${name}`} onClose={onClose}>
+    <Modal title={`Delete ${name}`} onClose={onClose} closable={!busy}>
       <form onSubmit={submit}>
         {err ? <ErrorBanner error={err} /> : null}
         {plan.isLoading && <Loading label="Checking what would be deleted…" />}

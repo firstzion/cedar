@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanNumber, decimate, findGaps, groupByUnit, kindOfValues, medianInterval, mergeRows, prepare, toCsv, wallClock, type SeriesInput } from './series.ts'
+import { assignSlots, cleanNumber, decimate, findGaps, groupByUnit, kindOfValues, medianInterval, mergeRows, prepare, toCsv, wallClock, type SeriesInput } from './series.ts'
 
 const Q = 15 * 60000
 const T0 = Date.parse('2026-10-01T00:00:00Z')
@@ -158,5 +158,17 @@ describe('cleanNumber', () => {
   it('CSV uses it', () => {
     const s: SeriesInput = { id: 'a', name: 'a', kind: 'number', ms: [T0], val: [Math.fround(8.83)] }
     expect(toCsv([s], T0, T0 + Q, 'UTC').split('\r\n')[1]).toBe('2026-10-01T00:00:00Z,8.83')
+  })
+})
+
+describe('assignSlots', () => {
+  it('keeps each point\'s colour while others come and go; new points take the lowest free slot', () => {
+    const a = assignSlots(new Map(), ['p1', 'p2', 'p3'])
+    expect([...a]).toEqual([['p1', 0], ['p2', 1], ['p3', 2]])
+    const b = assignSlots(a, ['p1', 'p3'])
+    expect([...b]).toEqual([['p1', 0], ['p3', 2]])
+    const c = assignSlots(b, ['p1', 'p3', 'p4'])
+    expect(c.get('p4')).toBe(1)
+    expect(a.get('p2')).toBe(1) // the earlier map is left alone
   })
 })

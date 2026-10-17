@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { displayName, errorCounts, refId, type HDict, type ValidationItem } from '@ssl/haystack'
 import { client } from '../../lib/client.ts'
@@ -38,14 +38,16 @@ export function NavTree({ siteId, site, selectedId, revealRec, onSelect }: {
   const byId = useMemo(() => new Map((equips ?? []).flatMap((e) => (refId(e.id) ? [[refId(e.id)!, e] as const] : []))), [equips])
   const problems = useMemo(() => errorCounts((valQ.data ?? []) as ValidationItem[]), [valQ.data])
 
-  // open the tree down to the selected record
-  useEffect(() => {
-    if (!revealRec) return
-    const ids = ancestorEquipIds(revealRec, byId)
-    const self = refId(revealRec.id)
-    if (revealRec.equip && self) ids.push(self)
+  // open the tree down to the selected record, once each time the selection (or the equipment list) changes,
+  // so the branches can still be closed by hand afterwards
+  const [revealed, setRevealed] = useState<{ rec: HDict | null; byId: Map<string, HDict> } | null>(null)
+  if (revealed?.rec !== revealRec || revealed?.byId !== byId) {
+    setRevealed({ rec: revealRec, byId })
+    const ids = revealRec ? ancestorEquipIds(revealRec, byId) : []
+    const self = revealRec ? refId(revealRec.id) : undefined
+    if (revealRec?.equip && self) ids.push(self)
     if (ids.length) setOpen((o) => new Set([...o, siteId, ...ids]))
-  }, [revealRec, byId, siteId])
+  }
 
   const toggle = (id: string) => setOpen((o) => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n })
 

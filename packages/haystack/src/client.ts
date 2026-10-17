@@ -1,6 +1,6 @@
 import { scramLogin } from './scram.ts'
 import { ApiError, AuthError, UnreachableError } from './errors.ts'
-import { decode, decodeGrid, isDateTime, isNumber, ref as encRef, type HDict, type HGrid, type HVal } from './values.ts'
+import { decode, decodeGrid, isDateTime, isNumber, isRecordId, rawRef as encRef, type HDict, type HGrid, type HVal } from './values.ts'
 import { parseValidation, type ValidationItem } from './validate.ts'
 
 /** Raw Hayson grid as it comes over the wire. Tools use this; the UI uses the typed methods below. */
@@ -221,8 +221,7 @@ export class HaystackClient {
     const end = point.hisEnd
     const id = point.id
     if (!isDateTime(end) || !id || typeof id !== 'object' || (id as { type?: string }).type !== 'ref') return null
-    const iso = (ms: number) => new Date(ms).toISOString().replace('.000Z', 'Z') + ' UTC'
-    const items = await this.hisRead((id as { id: string }).id, `${iso(end.ms - 2 * 3600000)},${iso(end.ms + 60000)}`)
+    const items = await this.hisRead((id as { id: string }).id, hisRangeString(end.ms - 2 * 3600000, end.ms + 60000))
     const last = items[items.length - 1]
     return last ? { ...last, tz: end.tz } : null
   }
@@ -249,9 +248,9 @@ async function permissionDenied(res: Response): Promise<string | null> {
   }
 }
 
-/** Record ids are used inside Axon text, so only allow the characters Haxall ids really use. */
+/** Record ids are used inside Axon text, so refuse anything that is not a plain id before it is sent. */
 function safeIdLocal(id: string): string {
-  if (!/^[A-Za-z0-9_.:~-]+$/.test(id)) throw new ApiError('validate', `Not a valid record id: ${id}`)
+  if (!isRecordId(id)) throw new ApiError('validate', `Not a valid record id: ${id}`)
   return id
 }
 

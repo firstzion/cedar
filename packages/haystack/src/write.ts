@@ -2,20 +2,17 @@
 // path a connector would use. Plain TypeScript so Node can run it directly (tests, scripts) as well as the browser.
 import { ApiError, ConflictError, RuleError } from './errors.ts'
 import type { HaystackClient } from './client.ts'
-import { decodeGrid, isDateTime, isRef, refId, str, type HDict, type HVal } from './values.ts'
+import { decodeGrid, isDateTime, isRecordId, isRef, rawMarker, rawNumber, rawRef, refId, str, type HDict, type HVal } from './values.ts'
 import { EQUIP_REF_TAGS, templateFor } from './templates.ts'
 
 // ---- raw (wire) values used when writing ------------------------------------------------
 
 export type RawTags = Record<string, unknown>
 export const REMOVE = { _kind: 'remove' } as const
-export const rawMarker = { _kind: 'marker' } as const
-export const rawRef = (id: string) => ({ _kind: 'ref', val: id })
-export const rawNumber = (val: number, unit?: string) => (unit ? { _kind: 'number', val, unit } : { _kind: 'number', val })
 
 /** Record ids and spec names are put into Axon text, so only the characters Haxall really uses are allowed. */
 export function safeId(id: string): string {
-  if (!/^[A-Za-z0-9_.:~-]+$/.test(id)) throw new RuleError(`Not a valid record id: ${id}`)
+  if (!isRecordId(id)) throw new RuleError(`Not a valid record id: ${id}`)
   return id
 }
 export function safeSpec(spec: string): string {

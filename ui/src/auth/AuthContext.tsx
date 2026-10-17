@@ -14,33 +14,17 @@ interface AuthValue {
   busy: boolean
   signIn(username: string, password: string): Promise<void>
   signOut(): void
-  recheck(): void
 }
 
 const Ctx = createContext<AuthValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient()
-  const [status, setStatus] = useState<AuthStatus>('checking')
+  // with a stored token the session is checked first; without one there is nothing to check
+  const [status, setStatus] = useState<AuthStatus>(() => (client.isLoggedIn ? 'checking' : 'signedOut'))
   const [user, setUser] = useState<string | null>(null)
   const [error, setError] = useState<AuthValue['error']>(null)
   const [busy, setBusy] = useState(false)
-
-  const check = useCallback(async () => {
-    if (!client.isLoggedIn) { setStatus('signedOut'); return }
-    setStatus('checking')
-    try {
-      const about = await client.about()
-      setUser(str(about.whoami) ?? null)
-      setError(null)
-      setStatus('signedIn')
-    } catch (e) {
-      const info = describeError(e)
-      // a dead session is normal after a restart; only show the message for real problems
-      setError(info.kind === 'auth' ? null : info)
-      setStatus('signedOut')
-    }
-  }, [])
 
   useEffect(() => {
     onAuthLost(() => {
@@ -48,8 +32,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError({ kind: 'auth', title: 'Signed out', message: 'Your session has ended. Please sign in again.' })
       setStatus('signedOut')
     })
-    void check()
-  }, [check, qc])
+    if (!client.isLoggedIn) return
+    // is the stored token still good? state only changes once Haxall has answered
+    let current = true
+    client.about().then(
+      (about) => {
+        if (!current) return
+        setUser(str(about.whoami) ?? null)
+        setError(null)
+        setStatus('signedIn')
+      },
+      (e: unknown) => {
+        if (!current) return
+        const info = describeError(e)
+        // a dead session is normal after a restart; only show the message for real problems
+        setError(info.kind === 'auth' ? null : info)
+        setStatus('signedOut')
+      },
+    )
+    return () => { current = false }
+  }, [qc])
 
   const signIn = useCallback(async (username: string, password: string) => {
     setBusy(true)
@@ -76,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('signedOut')
   }, [qc])
 
-  const value = useMemo(() => ({ status, user, error, busy, signIn, signOut, recheck: check }), [status, user, error, busy, signIn, signOut, check])
+  const value = useMemo(() => ({ status, user, error, busy, signIn, signOut }), [status, user, error, busy, signIn, signOut])
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 

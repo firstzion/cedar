@@ -200,3 +200,21 @@ export function wallClock(tz: string) {
     fromWall: (wall: number) => { const guess = wall - off(wall); return wall - off(guess) },
   }
 }
+
+// ---- colours ----------------------------------------------------------------------------
+
+/**
+ * Colour slot for each chosen point (0, 1, 2...). A point keeps its slot while others are added or removed;
+ * a new point takes the lowest free one. Returns a new map; `prev` is not changed.
+ */
+export function assignSlots(prev: ReadonlyMap<string, number>, points: string[]): Map<string, number> {
+  const next = new Map([...prev].filter(([id]) => points.includes(id)))
+  for (const id of points) {
+    if (next.has(id)) continue
+    const used = new Set(next.values())
+    let n = 0
+    while (used.has(n)) n++
+    next.set(id, n)
+  }
+  return next
+}

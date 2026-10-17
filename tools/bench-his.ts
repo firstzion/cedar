@@ -25,7 +25,6 @@ const rows = Array.from({ length: N }, (_, i) => ({
   val: { _kind: 'number', val: 60 + (i % 40) / 4, unit: '°F' },
 }))
 await t(`hisWrite ${N} rows in one call`, () => c.op('hisWrite', rows, { cols: ['ts', 'val'], meta: { id: ref } }))
-const range = `${new Date(start).toISOString().slice(0, 10)},${new Date(start + N * 900000).toISOString().slice(0, 10)}`
 const back = await t('hisRead', () => c.op('hisRead', [{ id: ref, range: '2020-01-01,2030-12-31' }], { cols: ['id', 'range'] }))
 console.log('rows read:', back.rows.length, 'first', JSON.stringify(back.rows[0]))
 const v = await c.evalAxon(`readById(@${id.val}).validate`)

@@ -1,0 +1,26 @@
+# Runs the checks that need no Haxall (lint, type check, unit tests) on every push and pull request.
+# The live tests (make test) need a running Haxall, so they are run locally.
+name: Checks
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run -s lint
+      - name: Type check
+        run: npm run -s typecheck
+      - name: Unit tests
+        run: npm run -s test:unit

@@ -39,7 +39,7 @@ export function AddSiteDialog({ onClose, onDone }: { onClose(): void; onDone(sit
   }
 
   return (
-    <Modal title="Add a site" onClose={onClose}>
+    <Modal title="Add a site" onClose={onClose} closable={!busy}>
       <form onSubmit={submit} noValidate>
         {err ? <ErrorBanner error={err} /> : null}
         <Field label="Site name" error={problems.name}><input value={f.name} onChange={set('name')} /></Field>

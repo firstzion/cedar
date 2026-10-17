@@ -78,7 +78,7 @@ test('create an AHU from its spec: required points come with it and everything f
   assert.ok(points.every((p) => p.his && str(p.tz) === 'Los_Angeles' && refId(p.equipRef) === id(equip) && refId(p.siteRef) === id(site)))
   assert.ok(points.filter((p) => str(p.kind) === 'Number').every((p) => typeof p.unit === 'string'))
   assert.deepEqual(await problems(equip), [])
-  for (const p of points.slice(0, 3)) assert.deepEqual(await problems(p), [], str(p.navName))
+  for (const p of points.slice(0, 3)) assert.deepEqual(await problems(p), [], str(p.navName) ?? 'point')
 })
 
 test('VAV linked to an AHU; submeter needs its parent meter', async () => {

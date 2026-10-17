@@ -102,7 +102,7 @@ export function EditDialog({ rec, onClose, onDone }: { rec: HDict; onClose(): vo
   }
 
   return (
-    <Modal title={`Edit ${displayName(rec)}`} onClose={onClose} wide>
+    <Modal title={`Edit ${displayName(rec)}`} onClose={onClose} closable={!busy} wide>
       <form onSubmit={submit} noValidate>
         {err ? <ErrorBanner error={err} /> : null}
         <Field label={nameTag === 'dis' ? 'Name (dis)' : 'Name'} error={problems[nameTag]} hint={nameTag === 'navName' ? 'The full display name is built from this and its parents.' : undefined}>

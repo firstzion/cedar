@@ -1,6 +1,5 @@
 // The logic behind the tag editor: turn tag values into editable drafts and back, and work out what really changed.
-import { isMarker, isNumber, isRef, PROTECTED_TAGS, REMOVE, isTagName, type HDict, type HVal, type RawTags } from '@ssl/haystack'
-import { rawMarker, rawNumber, rawRef } from '@ssl/haystack'
+import { isMarker, isNumber, isRecordId, isRef, isTagName, PROTECTED_TAGS, rawMarker, rawNumber, rawRef, REMOVE, type HDict, type HVal, type RawTags } from '@ssl/haystack'
 
 export type DraftKind = 'marker' | 'text' | 'number' | 'bool' | 'ref' | 'fixed'
 
@@ -39,7 +38,7 @@ export function rawOf(d: Draft): RawResult {
     }
     case 'ref': {
       const id = d.text.trim().replace(/^@/, '')
-      if (!/^[A-Za-z0-9_.:~-]+$/.test(id)) return { ok: false, error: 'Enter a record id' }
+      if (!isRecordId(id)) return { ok: false, error: 'Enter a record id' }
       return { ok: true, value: rawRef(id) }
     }
     case 'fixed': return { ok: false, error: 'This kind of value cannot be edited here' }

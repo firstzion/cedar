@@ -59,7 +59,7 @@ export function AddEquipDialog({ siteId, parentEquip, where, onClose, onDone }: 
   }
 
   return (
-    <Modal title={`Add equipment to ${where}`} onClose={onClose}>
+    <Modal title={`Add equipment to ${where}`} onClose={onClose} closable={!busy}>
       <form onSubmit={submit} noValidate>
         {err ? <ErrorBanner error={err} /> : null}
         <Field label="Type" hint={template?.description ?? 'A standard Haystack equipment type. Add its points afterwards.'}>
