@@ -7,10 +7,15 @@ import { ApiError, MARKER, type HDict } from '@ssl/haystack'
 
 const mocks = vi.hoisted(() => ({
   client: { read: vi.fn(), readByIds: vi.fn(), validateRec: vi.fn(), validateSite: vi.fn(), latestSample: vi.fn() },
+  // the site picked in the top bar; a test can change it to act like the site dropdown
+  current: { siteId: 'site1' },
 }))
 vi.mock('../../lib/client.ts', () => ({ client: mocks.client }))
 vi.mock('../../shell/SiteContext.tsx', () => ({
-  useSite: () => ({ site, siteId: 'site1', sites: [site], loading: false, error: null, refetch: () => {}, setSiteId: () => {} }),
+  useSite: () => {
+    const cur = sites.find((s) => (s.id as { id: string }).id === mocks.current.siteId)!
+    return { site: cur, siteId: mocks.current.siteId, sites, loading: false, error: null, refetch: () => {}, setSiteId: () => {} }
+  },
 }))
 
 import { SiteOrganization } from '../SiteOrganization.tsx'
@@ -28,21 +33,26 @@ const point: HDict = {
   equipRef: ref('ahu1', 'Demo Office AHU-1'), siteRef: ref('site1'), spec: ref('ph.points.sugar::DischargeAirTempSensor'),
   hisEnd: dt('2026-10-16T15:00:00-07:00'), tz: 'Los_Angeles',
 }
-const all: HDict[] = [site, ahu, vav, point]
+const site2: HDict = { id: ref('site2', 'Second Office'), dis: 'Second Office', site: MARKER, tz: 'Los_Angeles', spec: ref('ats::AtsSite') }
+const sites = [site, site2]
+const all: HDict[] = [site, site2, ahu, vav, point]
 
 function setup(url = '/site-organization') {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
+  const page = () => (
     <QueryClientProvider client={qc}>
       <MemoryRouter initialEntries={[url]}><SiteOrganization /></MemoryRouter>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
+  const r = render(page())
+  return { ...r, rerender: () => r.rerender(page()) }
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.current.siteId = 'site1'
   mocks.client.read.mockImplementation(async (f: string) => {
-    if (f.startsWith('equip and siteRef')) return [ahu, vav]
+    if (f === 'equip and siteRef==@site1') return [ahu, vav]
     if (f.startsWith('point and equipRef==@ahu1')) return [point]
     if (f.startsWith('point and equipRef')) return []
     return []
@@ -167,6 +177,27 @@ describe('Site Organization', () => {
     const actions = await screen.findByRole('group', { name: 'Change this record' })
     expect(within(actions).queryByRole('button', { name: 'Move' })).toBeNull()
     expect(within(actions).getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+  })
+
+  it('picking another site drops the old selection, so adding goes into the new site', async () => {
+    const page = setup('/site-organization?sel=ahu1')
+    expect(await screen.findByRole('heading', { name: 'Demo Office AHU-1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '+ Point' })).toBeEnabled()
+
+    mocks.current.siteId = 'site2'
+    page.rerender()
+    expect(await screen.findByRole('heading', { name: 'Second Office' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Demo Office AHU-1' })).toBeNull()
+    // the new site's tree is open, and the add buttons point at the new site, not at AHU-1
+    expect(await screen.findByRole('treeitem', { name: /Second Office/ })).toHaveAttribute('aria-expanded', 'true')
+    expect(await screen.findByText('No equipment')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('button', { name: '+ Equipment' })).toHaveAttribute('title', 'Add equipment inside Second Office'))
+    expect(screen.getByRole('button', { name: '+ Point' })).toBeDisabled()
+  })
+
+  it('a link to a record survives the first load of the sites', async () => {
+    setup('/site-organization?sel=p1')
+    expect(await screen.findByRole('heading', { name: 'Demo Office AHU-1 DischargeAirTempSensor' })).toBeInTheDocument()
   })
 
   it('Edit opens a dialog for that record; closing it leaves the page as it was', async () => {

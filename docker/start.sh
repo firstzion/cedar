@@ -4,6 +4,10 @@ set -e
 export PATH=$PATH:/app/haxall/bin
 mkdir -p /app/haxall/dbs && cd /app/haxall/dbs
 if [ ! -d "$HAXALL_DB_NAME" ] || [ -z "$(ls -A "$HAXALL_DB_NAME")" ]; then
+  if [ "$HAXALL_SU_PASSWORD" = "change-me" ]; then
+    echo "Refusing to create the database with the example password. Set HAXALL_SU_PASSWORD in .env to a password of your own." >&2
+    exit 1
+  fi
   echo "Initialising database $HAXALL_DB_NAME ..."
   fan hx init -headless "$HAXALL_DB_NAME" -suUser "$HAXALL_SU_USERNAME" -suPass "$HAXALL_SU_PASSWORD"
 else

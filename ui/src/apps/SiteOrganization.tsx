@@ -23,6 +23,17 @@ export function SiteOrganization() {
     if (sel && typeof matchMedia === 'function' && matchMedia('(max-width: 800px)').matches) detailRef.current?.scrollIntoView?.({ block: 'start' })
   }, [sel])
 
+  // When another site is picked, the selection still belongs to the old site: start again at the new site's top.
+  // Only a change from one loaded site to another counts, so a bookmarked ?sel= survives the first load.
+  const shownSite = useRef(siteId)
+  useEffect(() => {
+    const before = shownSite.current
+    shownSite.current = siteId
+    if (!before || !siteId || before === siteId) return
+    setRevealRec(null)
+    setParams((p) => { const next = new URLSearchParams(p); next.delete('sel'); return next })
+  }, [siteId, setParams])
+
   const update = useCallback((changes: Record<string, string | null>) => {
     const next = new URLSearchParams(params)
     for (const [k, v] of Object.entries(changes)) { if (v === null) next.delete(k); else next.set(k, v) }
@@ -37,6 +48,8 @@ export function SiteOrganization() {
   if (!site || !siteId) return <Empty title="No sites found" hint="Load the demo site with: make load" />
 
   const selected = sel ?? siteId
+  // the add buttons work on the record shown in the detail pane, never on one that is still being replaced
+  const shownRec = revealRec && refId(revealRec.id) === selected ? revealRec : null
   return (
     <section className="org">
       {notice && (
@@ -48,11 +61,11 @@ export function SiteOrganization() {
       <FilterBar value={filter} onRun={(f) => update({ filter: f })} onClear={() => update({ filter: null })} />
       <div className="org-body">
         <nav className="pane" aria-label="Navigation">
-          <AddBar selected={revealRec} siteId={siteId} notify={notify} goTo={goTo}
+          <AddBar selected={shownRec} siteId={siteId} notify={notify} goTo={goTo}
             onSiteCreated={(s) => { const id = refId(s.id); if (id) { setSiteId(id); update({ sel: id, filter: null }) } }} />
           {filter
             ? <FilterResults filter={filter} selectedId={sel} onSelect={(id) => update({ sel: id })} />
-            : <NavTree siteId={siteId} site={site} selectedId={selected} revealRec={revealRec} onSelect={(id) => update({ sel: id })} />}
+            : <NavTree key={siteId} siteId={siteId} site={site} selectedId={selected} revealRec={revealRec} onSelect={(id) => update({ sel: id })} />}
         </nav>
         <div className="pane detail-pane" ref={detailRef}>
           {selected

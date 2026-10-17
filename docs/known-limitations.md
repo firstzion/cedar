@@ -57,6 +57,6 @@ Things that work differently from what you might expect, or are deliberately not
 ## Tooling and platform
 - **Developed on macOS (Apple Silicon).** The Makefile needs a Unix shell. Windows (without WSL) and Linux were not tried; the Docker build is multi-architecture and should work on Intel.
 - **Node 24** is required (the tools run TypeScript directly with Node's built-in type stripping).
-- **Passwords:** the demo uses a single `su` account whose password is in `.env` (never committed). The app talks plain HTTP to `localhost`; it is not set up for use over a network.
+- **Passwords:** the demo uses a single `su` account whose password is in `.env` (never committed). The app talks plain HTTP to `localhost`; it is not set up for use over a network, and Docker only lets this computer reach Haxall (other machines on the same network cannot). `make up` will not create a new database while the password is still the example `change-me`.
 - **Changing `HAXALL_SU_PASSWORD` in `.env` later does not change an existing database's password.** It is applied only when the database is first created (use `make reset`).
 - **No git repository yet**, as agreed. `.gitignore` and `.env.example` are ready for it.

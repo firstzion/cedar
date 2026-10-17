@@ -157,6 +157,6 @@ describe('cleanNumber', () => {
   })
   it('CSV uses it', () => {
     const s: SeriesInput = { id: 'a', name: 'a', kind: 'number', ms: [T0], val: [Math.fround(8.83)] }
-    expect(toCsv([s], T0, T0 + Q, 'UTC').split('\r\n')[1]).toBe('2026-10-01T00:00:00+00:00,8.83')
+    expect(toCsv([s], T0, T0 + Q, 'UTC').split('\r\n')[1]).toBe('2026-10-01T00:00:00Z,8.83')
   })
 })

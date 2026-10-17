@@ -11,7 +11,8 @@ services:
         DEFS_REF: ${DEFS_REF}
         FANTOM_REF: ${FANTOM_REF}
     ports:
-      - "${HAXALL_PORT:-8080}:8080"
+      # 127.0.0.1: only this computer can reach Haxall, not other machines on the same network
+      - "127.0.0.1:${HAXALL_PORT:-8080}:8080"
     volumes:
       - ../dbs:/app/haxall/dbs
       - ../specs:/app/specs

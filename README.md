@@ -154,6 +154,7 @@ The equipment templates are in [`specs/`](specs/README.md): one small file per k
 | What you see | What to do |
 |---|---|
 | `make up` says it cannot connect to Docker | Open Docker Desktop and wait until it says it is running, then try again |
+| `make up` says the password is still "change-me" | Open `.env`, set `HAXALL_SU_PASSWORD` to a password of your own, and run `make up` again |
 | "port is already allocated" for 8080 | Something else uses port 8080. Change `HAXALL_PORT` in `.env` (for example 8090), then `make down` and `make up` |
 | The web app says **Haxall is unreachable** | `make status`; if it is not running, `make up`. The app reconnects by itself |
 | The web app returns to the sign-in page | Normal after Haxall restarts: your session ended. Sign in again |

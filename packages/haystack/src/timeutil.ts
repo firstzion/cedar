@@ -19,16 +19,17 @@ export function parts(ms: number, tz: string): LocalParts {
   }
   const o: Record<string, string> = {}
   for (const p of f.formatToParts(ms)) o[p.type] = p.value
+  // A zero offset is written "GMT" by some versions of the time zone data and "GMT+00:00" by others: always use Z
   const off = o.timeZoneName.replace('GMT', '')
   return {
     year: +o.year, month: +o.month, day: +o.day, hour: +o.hour, minute: +o.minute, second: +o.second,
-    dow: DOW[o.weekday], offset: off === '' ? 'Z' : off,
+    dow: DOW[o.weekday], offset: off === '' || off === '+00:00' || off === '-00:00' ? 'Z' : off,
   }
 }
 
 const p2 = (n: number) => String(n).padStart(2, '0')
 
-/** ISO 8601 with the zone's UTC offset, e.g. 2026-10-16T08:15:00-07:00 */
+/** ISO 8601 with the zone's UTC offset, e.g. 2026-10-16T08:15:00-07:00 (Z when the offset is zero) */
 export function iso(ms: number, tz: string): string {
   const p = parts(ms, tz)
   return `${p.year}-${p2(p.month)}-${p2(p.day)}T${p2(p.hour)}:${p2(p.minute)}:${p2(p.second)}${p.offset}`

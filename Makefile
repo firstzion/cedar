@@ -2,10 +2,16 @@
 COMPOSE = docker compose --env-file .env -f docker/compose.yaml
 WAIT = echo 'waiting for Haxall...'; until [ "$$(docker inspect -f '{{.State.Health.Status}}' skyspark_lite_haxall)" = "healthy" ]; do sleep 2; done; sleep 12
 
-.PHONY: build up down logs reset status
+.PHONY: build up down logs reset status check-env
 build:  ## build the Haxall image (slow the first time)
 	$(COMPOSE) build
-up:     ## start Haxall, then load the demo data if it is missing (history is lost on restart)
+check-env: ## stop early if .env is missing, or still has the example password when a new database would be created
+	@test -f .env || { echo 'No .env file yet. Run: cp .env.example .env  then set HAXALL_SU_PASSWORD to a password of your own.'; exit 1; }
+	@db=$$(sed -n 's/^HAXALL_DB_NAME=//p' .env | tail -n 1 | tr -d '\r'); db=$${db:-demo}; \
+	 if grep -qE '^HAXALL_SU_PASSWORD=change-me[[:space:]]*$$' .env && [ -z "$$(ls -A "dbs/$$db" 2>/dev/null)" ]; then \
+	   echo 'HAXALL_SU_PASSWORD in .env is still the example "change-me". Set a password of your own, then run make up again.'; exit 1; \
+	 fi
+up: check-env ## start Haxall, then load the demo data if it is missing (history is lost on restart)
 	$(COMPOSE) up -d --build
 	@$(WAIT)
 	npm run -s demo:ensure
